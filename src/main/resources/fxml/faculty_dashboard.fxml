@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.smartcourse.controller.FacultyDashboardController"
+            prefWidth="1100" prefHeight="700" styleClass="root">
+
+    <left>
+        <VBox styleClass="sidebar" spacing="0" prefWidth="210" alignment="TOP_CENTER">
+            <padding><Insets top="28" right="14" bottom="28" left="14"/></padding>
+            <VBox alignment="CENTER" spacing="4">
+                <Label text="🎓 SCR Portal" styleClass="sidebar-logo"/>
+                <Label text="FACULTY" styleClass="sidebar-subtitle"/>
+            </VBox>
+            <Separator style="-fx-padding: 16 0;"/>
+            <VBox spacing="0" VBox.vgrow="ALWAYS">
+                <padding><Insets top="16"/></padding>
+                <Button text="📊  Dashboard" styleClass="nav-btn" onAction="#showDashboard" maxWidth="Infinity"/>
+                <Button text="📚  My Courses" styleClass="nav-btn" onAction="#showMyCourses" maxWidth="Infinity"/>
+                <Button text="📋  Attendance" styleClass="nav-btn" onAction="#showAttendance" maxWidth="Infinity"/>
+                <Button text="🏆  Evaluate Students" styleClass="nav-btn" onAction="#showEvaluate" maxWidth="Infinity"/>
+                <Button text="📅  Schedule" styleClass="nav-btn" onAction="#showSchedule" maxWidth="Infinity"/>
+            </VBox>
+            <VBox spacing="8" alignment="BOTTOM_CENTER">
+                <VBox styleClass="user-badge" spacing="2" alignment="CENTER">
+                    <Label fx:id="sidebarName" text="Faculty" styleClass="user-name"/>
+                    <Label fx:id="sidebarEmail" text="" style="-fx-font-size:11px; -fx-text-fill:#64748b;"/>
+                </VBox>
+                <Button text="🚪  Logout" styleClass="btn-danger" onAction="#handleLogout" maxWidth="Infinity"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentPane" styleClass="content-area"/>
+    </center>
+</BorderPane>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.smartcourse.controller.StudentDashboardController"
+            prefWidth="1100" prefHeight="700" styleClass="root">
+
+    <!-- SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" spacing="0" prefWidth="210" alignment="TOP_CENTER">
+            <padding><Insets top="28" right="14" bottom="28" left="14"/></padding>
+
+            <!-- Logo -->
+            <VBox alignment="CENTER" spacing="4">
+                <Label text="🎓 SCR Portal" styleClass="sidebar-logo"/>
+                <Label text="STUDENT" styleClass="sidebar-subtitle"/>
+            </VBox>
+            <Separator style="-fx-padding: 16 0;"/>
+            <VBox spacing="0" VBox.vgrow="ALWAYS">
+                <padding><Insets top="16"/></padding>
+                <Button id="navDashboard" text="📊  Dashboard" styleClass="nav-btn" onAction="#showDashboard" maxWidth="Infinity"/>
+                <Button id="navBrowse" text="📚  Browse Courses" styleClass="nav-btn" onAction="#showBrowse" maxWidth="Infinity"/>
+                <Button id="navMyReg" text="✅  My Registrations" styleClass="nav-btn" onAction="#showRegistrations" maxWidth="Infinity"/>
+                <Button id="navSchedule" text="📅  My Schedule" styleClass="nav-btn" onAction="#showSchedule" maxWidth="Infinity"/>
+                <Button id="navGrades" text="🏆  Grades" styleClass="nav-btn" onAction="#showGrades" maxWidth="Infinity"/>
+                <Button id="navAttendance" text="📋  Attendance" styleClass="nav-btn" onAction="#showAttendance" maxWidth="Infinity"/>
+            </VBox>
+
+            <!-- User Badge + Logout -->
+            <VBox spacing="8" alignment="BOTTOM_CENTER">
+                <VBox styleClass="user-badge" spacing="2" alignment="CENTER">
+                    <Label fx:id="sidebarName" text="Student" styleClass="user-name"/>
+                    <Label fx:id="sidebarEmail" text="student@uni.edu" style="-fx-font-size:11px; -fx-text-fill:#64748b;"/>
+                </VBox>
+                <Button text="🚪  Logout" styleClass="btn-danger" onAction="#handleLogout" maxWidth="Infinity"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- CONTENT AREA -->
+    <center>
+        <StackPane fx:id="contentPane" styleClass="content-area">
+            <!-- Views are swapped in via controller -->
+        </StackPane>
+    </center>
+</BorderPane>
