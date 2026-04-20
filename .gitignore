@@ -1,0 +1,4 @@
+target/
+*.db
+*.class
+.DS_Store
