@@ -55,6 +55,11 @@ public class LoginController {
         }
     }
 
+    @FXML
+    private void handleNavigateToSignup() {
+        SceneManager.switchScene("/fxml/signup.fxml", "Smart Course Registration - Create Account");
+    }
+
     private void showError(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);

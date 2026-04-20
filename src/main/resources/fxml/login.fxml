@@ -41,6 +41,12 @@
             <Button fx:id="loginBtn" text="Sign In →" styleClass="btn-primary"
                     onAction="#handleLogin" maxWidth="320" minWidth="320"/>
 
+            <HBox spacing="5" alignment="CENTER">
+                <Label text="Don't have an account?" style="-fx-text-fill:#94a3b8; -fx-font-size:13px;"/>
+                <Hyperlink text="Create Account" onAction="#handleNavigateToSignup" 
+                           style="-fx-text-fill:#6366f1; -fx-font-weight:600; -fx-underline:false; -fx-padding:0;"/>
+            </HBox>
+
             <Separator/>
 
             <!-- Demo credentials hint -->

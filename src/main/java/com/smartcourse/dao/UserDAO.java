@@ -17,6 +17,16 @@ public class UserDAO {
         return null;
     }
 
+    public boolean existsByEmail(String email) throws SQLException {
+        PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM users WHERE email = ?");
+        ps.setString(1, email);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return rs.getInt(1) > 0;
+        }
+        return false;
+    }
+
     public User findById(int userId) throws SQLException {
         PreparedStatement ps = conn.prepareStatement("SELECT * FROM users WHERE user_id = ?");
         ps.setInt(1, userId);

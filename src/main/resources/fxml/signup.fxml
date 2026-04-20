@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<StackPane prefHeight="600" prefWidth="900" styleClass="login-root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.smartcourse.controller.SignupController">
+    <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+        <VBox alignment="CENTER" spacing="40" style="-fx-padding: 60 0;">
+            <!-- Header -->
+            <VBox alignment="CENTER" spacing="8">
+                <Label styleClass="logo-icon" text="🎓" />
+                <Label styleClass="login-title" text="Smart Course Registration" />
+                <Label styleClass="login-subtitle" text="Create Your Academic Profile" />
+            </VBox>
+
+            <!-- Signup Card -->
+            <VBox alignment="CENTER" maxWidth="550" spacing="25" styleClass="login-card">
+                <Label style="-fx-font-size:18px; -fx-font-weight:700; -fx-text-fill:#f8fafc;" text="User Registration" />
+
+                <!-- Status Labels -->
+                <VBox alignment="CENTER" spacing="5">
+                    <Label fx:id="errorLabel" maxWidth="450" styleClass="error-label" visible="false" wrapText="true" />
+                    <Label fx:id="successLabel" maxWidth="450" styleClass="success-label" visible="false" wrapText="true" />
+                </VBox>
+
+                <GridPane alignment="CENTER" hgap="25" vgap="20">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="220" prefWidth="220" />
+                        <ColumnConstraints minWidth="220" prefWidth="220" />
+                    </columnConstraints>
+                    
+                    <!-- Basic Info -->
+                    <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0">
+                        <Label styleClass="label-form" text="FULL NAME" />
+                        <TextField fx:id="nameField" promptText="Enter your full name" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <Label styleClass="label-form" text="EMAIL ADDRESS" />
+                        <TextField fx:id="emailField" promptText="you@university.edu" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <Label styleClass="label-form" text="PASSWORD" />
+                        <PasswordField fx:id="passwordField" promptText="••••••••" />
+                    </VBox>
+
+                    <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                        <Label styleClass="label-form" text="SELECT ROLE" />
+                        <ComboBox fx:id="roleComboBox" maxWidth="Infinity" promptText="Identify your role" />
+                    </VBox>
+                </GridPane>
+
+                <Separator style="-fx-opacity: 0.5;"/>
+
+                <!-- Dynamic Role-Specific Fields -->
+                <StackPane>
+                    <!-- Student Fields -->
+                    <VBox fx:id="studentFields" managed="false" spacing="20" visible="false">
+                        <GridPane hgap="25" vgap="20">
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label styleClass="label-form" text="STUDENT ID" />
+                                <TextField fx:id="studentIdField" promptText="e.g. 2024001" />
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label styleClass="label-form" text="CURRENT SEMESTER" />
+                                <TextField fx:id="semesterField" promptText="1 - 8" />
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="1">
+                                <Label styleClass="label-form" text="DEGREE PROGRAM" />
+                                <TextField fx:id="programField" promptText="e.g. B.Tech Computer Science" />
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- Faculty Fields -->
+                    <VBox fx:id="facultyFields" managed="false" spacing="20" visible="false">
+                        <GridPane hgap="25" vgap="20">
+                            <VBox spacing="6" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label styleClass="label-form" text="FACULTY ID" />
+                                <TextField fx:id="facultyIdField" promptText="e.g. F-501" />
+                            </VBox>
+                            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label styleClass="label-form" text="DEPARTMENT" />
+                                <TextField fx:id="departmentField" promptText="e.g. Data Science" />
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- Admin Fields -->
+                    <VBox fx:id="adminFields" managed="false" spacing="20" visible="false">
+                        <VBox spacing="6">
+                            <Label styleClass="label-form" text="ADMINISTRATOR ID" />
+                            <TextField fx:id="adminIdField" promptText="e.g. ADM-99" />
+                        </VBox>
+                    </VBox>
+                </StackPane>
+
+                <VBox alignment="CENTER" spacing="15" style="-fx-padding: 10 0 0 0;">
+                    <Button maxWidth="Infinity" onAction="#handleSignup" styleClass="btn-primary" text="Register Account" />
+                    <Button maxWidth="Infinity" onAction="#handleBackToLogin" styleClass="btn-secondary" text="Return to Sign In" />
+                </VBox>
+            </VBox>
+        </VBox>
+    </ScrollPane>
+</StackPane>

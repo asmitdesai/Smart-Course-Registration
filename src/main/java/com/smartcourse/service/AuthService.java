@@ -27,6 +27,13 @@ public class AuthService {
         return null;
     }
 
+    public void register(User user) throws SQLException {
+        if (userDAO.existsByEmail(user.getEmail())) {
+            throw new SQLException("A user with this email already exists.");
+        }
+        userDAO.insert(user);
+    }
+
     public void logout() {
         currentUser = null;
     }
