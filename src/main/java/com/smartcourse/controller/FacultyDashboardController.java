@@ -155,13 +155,19 @@ public class FacultyDashboardController implements Initializable {
     }
 
     private Node buildAttendanceView() {
-        VBox root = new VBox(20);
+        VBox root = new VBox(24);
         Label title = new Label("📋 Manage Attendance");
         title.getStyleClass().add("page-title");
 
-        // Course selector
+        // Course selector card
+        VBox selectorCard = new VBox(12);
+        selectorCard.getStyleClass().add("card");
+        Label selectTitle = new Label("Select Course");
+        selectTitle.getStyleClass().add("card-title");
+
         ComboBox<Schedule> courseCombo = new ComboBox<>();
         courseCombo.setPromptText("Select a course...");
+        courseCombo.setMaxWidth(Double.MAX_VALUE);
         try {
             courseCombo.setItems(FXCollections
                     .observableArrayList(scheduleService.getSchedulesByFaculty(currentFaculty.getUserId())));
@@ -176,6 +182,7 @@ public class FacultyDashboardController implements Initializable {
             });
         } catch (SQLException e) {
         }
+        selectorCard.getChildren().addAll(selectTitle, courseCombo);
 
         TableView<Attendance> table = new TableView<>();
         table.getStyleClass().add("table-view");
@@ -207,51 +214,60 @@ public class FacultyDashboardController implements Initializable {
             }
         });
 
-        // Edit fields
-        HBox editRow = new HBox(12);
-        editRow.setAlignment(Pos.CENTER_LEFT);
+        // Edit form
+        VBox formCard = new VBox(16);
+        formCard.getStyleClass().add("card");
+        formCard.setMaxWidth(600);
+        Label formTitle = new Label("Update Records");
+        formTitle.getStyleClass().add("card-title");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(15);
+        grid.setVgap(12);
+
+        Label l1 = new Label("TOTAL CLASSES");
+        l1.getStyleClass().add("label-form");
         TextField totalField = new TextField();
-        totalField.setPromptText("Total Classes");
-        totalField.setPrefWidth(150);
+        totalField.setPromptText("e.g. 40");
+        grid.add(l1, 0, 0);
+        grid.add(totalField, 0, 1);
+
+        Label l2 = new Label("ATTENDED CLASSES");
+        l2.getStyleClass().add("label-form");
         TextField attendedField = new TextField();
-        attendedField.setPromptText("Attended");
-        attendedField.setPrefWidth(150);
+        attendedField.setPromptText("e.g. 35");
+        grid.add(l2, 1, 0);
+        grid.add(attendedField, 1, 1);
+
         Button saveBtn = new Button("Save Attendance");
         saveBtn.getStyleClass().add("btn-primary");
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
         saveBtn.setOnAction(e -> {
             Attendance sel = table.getSelectionModel().getSelectedItem();
             if (sel == null || totalField.getText().isEmpty() || attendedField.getText().isEmpty()) {
-                statusLabel.setText("Select a student and enter values.");
+                statusLabel.setText("⚠️ Select a student and enter values.");
+                statusLabel.getStyleClass().setAll("warning-label");
                 return;
             }
             try {
                 sel.setTotalClasses(Integer.parseInt(totalField.getText()));
                 sel.setAttendedClasses(Integer.parseInt(attendedField.getText()));
                 academicService.saveAttendance(sel);
-                statusLabel.setText("✅ Attendance saved!");
+                statusLabel.setText("✅ Attendance saved successfully!");
                 statusLabel.getStyleClass().setAll("success-label");
                 Schedule cs = courseCombo.getValue();
                 if (cs != null)
                     table.setItems(
                             FXCollections.observableArrayList(academicService.getCourseAttendance(cs.getCourseId())));
             } catch (Exception ex) {
-                statusLabel.setText("Error: " + ex.getMessage());
+                statusLabel.setText("❌ Error: " + ex.getMessage());
+                statusLabel.getStyleClass().setAll("error-label");
             }
         });
-        editRow.getChildren().addAll(
-                new Label("Total:") {
-                    {
-                        setStyle("-fx-text-fill:#94a3b8;");
-                    }
-                }, totalField,
-                new Label("Attended:") {
-                    {
-                        setStyle("-fx-text-fill:#94a3b8;");
-                    }
-                }, attendedField,
-                saveBtn, statusLabel);
 
-        root.getChildren().addAll(title, courseCombo, table, editRow);
+        formCard.getChildren().addAll(formTitle, grid, saveBtn, statusLabel);
+
+        root.getChildren().addAll(title, selectorCard, table, formCard);
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(true);
         sp.setFitToHeight(true);
@@ -260,12 +276,18 @@ public class FacultyDashboardController implements Initializable {
     }
 
     private Node buildEvaluateView() {
-        VBox root = new VBox(20);
+        VBox root = new VBox(24);
         Label title = new Label("🏆 Evaluate Students");
         title.getStyleClass().add("page-title");
 
+        VBox selectorCard = new VBox(12);
+        selectorCard.getStyleClass().add("card");
+        Label selectTitle = new Label("Select Course");
+        selectTitle.getStyleClass().add("card-title");
+
         ComboBox<Schedule> courseCombo = new ComboBox<>();
         courseCombo.setPromptText("Select a course...");
+        courseCombo.setMaxWidth(Double.MAX_VALUE);
         try {
             courseCombo.setItems(FXCollections
                     .observableArrayList(scheduleService.getSchedulesByFaculty(currentFaculty.getUserId())));
@@ -280,6 +302,7 @@ public class FacultyDashboardController implements Initializable {
             });
         } catch (SQLException e) {
         }
+        selectorCard.getChildren().addAll(selectTitle, courseCombo);
 
         TableView<Grade> table = new TableView<>();
         table.getStyleClass().add("table-view");
@@ -295,9 +318,6 @@ public class FacultyDashboardController implements Initializable {
         table.getColumns().addAll(studentCol, marksCol, gradeCol);
 
         Label statusLabel = new Label("");
-        TextField marksField = new TextField();
-        marksField.setPromptText("Enter marks (0-100)");
-        marksField.setPrefWidth(200);
 
         courseCombo.setOnAction(e -> {
             Schedule s = courseCombo.getValue();
@@ -310,36 +330,47 @@ public class FacultyDashboardController implements Initializable {
             }
         });
 
+        // Evaluation form
+        VBox formCard = new VBox(16);
+        formCard.getStyleClass().add("card");
+        formCard.setMaxWidth(600);
+        Label formTitle = new Label("Submit Marks");
+        formTitle.getStyleClass().add("card-title");
+
+        Label l1 = new Label("STUDENT MARKS (0-100)");
+        l1.getStyleClass().add("label-form");
+        TextField marksField = new TextField();
+        marksField.setPromptText("e.g. 85.5");
+
         Button saveBtn = new Button("Save Grade");
         saveBtn.getStyleClass().add("btn-primary");
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
         saveBtn.setOnAction(e -> {
             Grade sel = table.getSelectionModel().getSelectedItem();
             if (sel == null || marksField.getText().isEmpty()) {
-                statusLabel.setText("Select student and enter marks.");
+                statusLabel.setText("⚠️ Select student and enter marks.");
+                statusLabel.getStyleClass().setAll("warning-label");
                 return;
             }
             try {
                 double marks = Double.parseDouble(marksField.getText());
                 sel.setMarks(marks);
                 academicService.saveGrade(sel);
-                statusLabel.setText("✅ Grade saved!");
+                statusLabel.setText("✅ Grade saved successfully!");
                 statusLabel.getStyleClass().setAll("success-label");
                 Schedule cs = courseCombo.getValue();
                 if (cs != null)
                     table.setItems(
                             FXCollections.observableArrayList(academicService.getCourseGrades(cs.getCourseId())));
             } catch (Exception ex) {
-                statusLabel.setText("Error: " + ex.getMessage());
+                statusLabel.setText("❌ Error: " + ex.getMessage());
+                statusLabel.getStyleClass().setAll("error-label");
             }
         });
 
-        HBox editRow = new HBox(12, new Label("Marks:") {
-            {
-                setStyle("-fx-text-fill:#94a3b8;");
-            }
-        }, marksField, saveBtn, statusLabel);
-        editRow.setAlignment(Pos.CENTER_LEFT);
-        root.getChildren().addAll(title, courseCombo, table, editRow);
+        formCard.getChildren().addAll(formTitle, l1, marksField, saveBtn, statusLabel);
+
+        root.getChildren().addAll(title, selectorCard, table, formCard);
 
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(true);

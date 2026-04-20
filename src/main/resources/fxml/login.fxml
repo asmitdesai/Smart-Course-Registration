@@ -8,9 +8,9 @@
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.smartcourse.controller.LoginController"
            styleClass="login-root"
-           prefWidth="900" prefHeight="600">
+           minWidth="900" minHeight="600">
 
-    <VBox alignment="CENTER" spacing="40">
+    <VBox alignment="CENTER" spacing="40" VBox.vgrow="ALWAYS">
         <!-- Header -->
         <VBox alignment="CENTER" spacing="8">
             <Label text="🎓" styleClass="logo-icon"/>
@@ -19,11 +19,11 @@
         </VBox>
 
         <!-- Login Card -->
-        <VBox styleClass="login-card" alignment="CENTER" spacing="20" maxWidth="400">
+        <VBox styleClass="login-card" alignment="CENTER" spacing="20" maxWidth="400" minWidth="400">
             <Label text="Sign In to Your Account" style="-fx-font-size:17px; -fx-font-weight:600; -fx-text-fill:#cbd5e1;"/>
 
             <!-- Error Label -->
-            <Label fx:id="errorLabel" text="" styleClass="error-label" visible="false" wrapText="true" maxWidth="320"/>
+            <Label fx:id="errorLabel" text="" styleClass="error-label" visible="false" wrapText="true" maxWidth="320" minHeight="0" prefHeight="-1"/>
 
             <!-- Email -->
             <VBox spacing="4">

@@ -18,7 +18,9 @@ import javafx.scene.text.FontWeight;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.io.IOException;
 import java.util.*;
+import javafx.fxml.FXMLLoader;
 
 public class StudentDashboardController implements Initializable {
     @FXML
@@ -272,76 +274,48 @@ public class StudentDashboardController implements Initializable {
                     currentStudent.getUserId(), course.getCourseId(), courseService);
 
             switch (result) {
-                case ALREADY_REGISTERED -> {
-                    statusLabel.setText("⚠️ You're already registered for " + course.getName());
-                    statusLabel.getStyleClass().setAll("error-label");
+                case SUCCESS -> {
+                    try {
+                        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/payment.fxml"));
+                        Node paymentView = loader.load();
+                        PaymentController pc = loader.getController();
+
+                        List<Registration> regs = registrationService
+                                .getStudentRegistrations(currentStudent.getUserId());
+                        Registration reg = regs.stream()
+                                .filter(r -> r.getCourseId() == course.getCourseId()
+                                        && "PAYMENT_PENDING".equals(r.getStatus()))
+                                .findFirst().orElse(null);
+
+                        if (reg != null) {
+                            pc.setPaymentData(currentStudent, course, reg, this);
+                            setContent(paymentView);
+                        } else {
+                            statusLabel.setText("❌ Error initiating registration.");
+                        }
+                    } catch (IOException ex) {
+                        statusLabel.setText("❌ UI Error: " + ex.getMessage());
+                    }
                 }
                 case SEAT_FULL -> {
-                    statusLabel.setText("❌ Course Full: No seats available for " + course.getName());
+                    statusLabel.setText("❌ Sorry, this course is full.");
                     statusLabel.getStyleClass().setAll("error-label");
+                }
+                case ALREADY_REGISTERED -> {
+                    statusLabel.setText("ℹ️ You are already enrolled in this course.");
+                    statusLabel.getStyleClass().setAll("info-label");
                 }
                 case PREREQUISITE_NOT_MET -> {
-                    statusLabel.setText("❌ Prerequisites not met for " + course.getName());
-                    statusLabel.getStyleClass().setAll("error-label");
+                    statusLabel.setText("⚠️ Prerequisite not met for this course.");
+                    statusLabel.getStyleClass().setAll("warning-label");
                 }
-                case SUCCESS -> showPaymentDialog(course, statusLabel);
             }
         } catch (SQLException e) {
             statusLabel.setText("Error: " + e.getMessage());
         }
     }
 
-    private void showPaymentDialog(Course course, Label statusLabel) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("💳 Fee Payment");
-        dialog.setHeaderText("Complete Payment for " + course.getName());
-
-        VBox content = new VBox(16);
-        content.setPadding(new Insets(20));
-
-        double amount = course.getCredits() * 150.0;
-        content.getChildren().addAll(
-                styledLabel("Course: " + course.getName()),
-                styledLabel("Credits: " + course.getCredits()),
-                styledLabel(String.format("Amount Due: $%.2f", amount)),
-                new Separator(),
-                styledLabel("Card Number:"),
-                cardField("**** **** **** 1234"),
-                styledLabel("Expiry:"), cardField("MM/YY"),
-                styledLabel("CVV:"), cardField("•••"));
-
-        ((DialogPane) dialog.getDialogPane()).setContent(content);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        dialog.getDialogPane().getStyleClass().add("dialog-pane");
-
-        Optional<ButtonType> result = dialog.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            try {
-                // Find the pending registration
-                List<Registration> regs = registrationService.getStudentRegistrations(currentStudent.getUserId());
-                Optional<Registration> pending = regs.stream()
-                        .filter(r -> r.getCourseId() == course.getCourseId() && "PAYMENT_PENDING".equals(r.getStatus()))
-                        .findFirst();
-                if (pending.isPresent()) {
-                    boolean success = registrationService.processPayment(currentStudent.getUserId(),
-                            course.getCourseId(), pending.get().getRegId());
-                    if (success) {
-                        statusLabel.setText("✅ Successfully registered for " + course.getName() + "!");
-                        statusLabel.getStyleClass().setAll("success-label");
-                        showBrowse();
-                    } else {
-                        statusLabel.setText("❌ Payment failed. Please try again.");
-                        statusLabel.getStyleClass().setAll("error-label");
-                    }
-                }
-            } catch (SQLException e) {
-                statusLabel.setText("Error: " + e.getMessage());
-            }
-        } else {
-            statusLabel.setText("ℹ️ Registration cancelled.");
-            statusLabel.getStyleClass().setAll("info-label");
-        }
-    }
+    // Deleted showPaymentDialog in favor of PaymentController
 
     private Label styledLabel(String text) {
         Label l = new Label(text);

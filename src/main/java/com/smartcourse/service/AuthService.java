@@ -20,7 +20,7 @@ public class AuthService {
 
     public User login(String email, String password) throws SQLException {
         User user = userDAO.findByEmail(email);
-        if (user != null && user.getPassword().equals(password)) {
+        if (user != null && org.mindrot.jbcrypt.BCrypt.checkpw(password, user.getPassword())) {
             currentUser = user;
             return user;
         }
@@ -31,6 +31,9 @@ public class AuthService {
         if (userDAO.existsByEmail(user.getEmail())) {
             throw new SQLException("A user with this email already exists.");
         }
+        // Hash password before saving
+        String hashedPassword = org.mindrot.jbcrypt.BCrypt.hashpw(user.getPassword(), org.mindrot.jbcrypt.BCrypt.gensalt());
+        user.setPassword(hashedPassword);
         userDAO.insert(user);
     }
 

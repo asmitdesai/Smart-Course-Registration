@@ -69,11 +69,11 @@ public class CourseDAO {
         ps.executeUpdate();
     }
 
-    public void decrementSeats(int courseId) throws SQLException {
+    public boolean decrementSeats(int courseId) throws SQLException {
         PreparedStatement ps = conn.prepareStatement(
                 "UPDATE courses SET seats_available = seats_available - 1 WHERE course_id = ? AND seats_available > 0");
         ps.setInt(1, courseId);
-        ps.executeUpdate();
+        return ps.executeUpdate() > 0;
     }
 
     public void incrementSeats(int courseId) throws SQLException {

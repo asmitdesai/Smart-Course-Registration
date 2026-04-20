@@ -18,14 +18,22 @@ public class DatabaseManager {
         }
     }
 
-    public static DatabaseManager getInstance() {
+    public static synchronized DatabaseManager getInstance() {
         if (instance == null) {
             instance = new DatabaseManager();
         }
         return instance;
     }
 
-    public Connection getConnection() {
+    public synchronized Connection getConnection() {
+        try {
+            if (connection == null || connection.isClosed()) {
+                connection = DriverManager.getConnection(DB_URL);
+                connection.createStatement().execute("PRAGMA foreign_keys = ON");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to re-establish database connection", e);
+        }
         return connection;
     }
 
@@ -143,10 +151,12 @@ public class DatabaseManager {
         String insertUser = "INSERT INTO users (name, email, password, role, program, semester, department, student_id, faculty_id, admin_id) VALUES (?,?,?,?,?,?,?,?,?,?)";
         PreparedStatement ps = connection.prepareStatement(insertUser);
 
+        String demoPassword = org.mindrot.jbcrypt.BCrypt.hashpw("password123", org.mindrot.jbcrypt.BCrypt.gensalt());
+
         // Admin
         ps.setString(1, "Dr. Admin");
         ps.setString(2, "admin@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "ADMIN");
         ps.setNull(5, Types.VARCHAR);
         ps.setNull(6, Types.INTEGER);
@@ -159,7 +169,7 @@ public class DatabaseManager {
         // Students
         ps.setString(1, "Alice Johnson");
         ps.setString(2, "student@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "STUDENT");
         ps.setString(5, "Computer Science");
         ps.setInt(6, 3);
@@ -171,7 +181,7 @@ public class DatabaseManager {
 
         ps.setString(1, "Bob Smith");
         ps.setString(2, "bob@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "STUDENT");
         ps.setString(5, "Software Engineering");
         ps.setInt(6, 2);
@@ -183,7 +193,7 @@ public class DatabaseManager {
 
         ps.setString(1, "Carol White");
         ps.setString(2, "carol@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "STUDENT");
         ps.setString(5, "Information Systems");
         ps.setInt(6, 4);
@@ -196,7 +206,7 @@ public class DatabaseManager {
         // Faculty
         ps.setString(1, "Prof. David Lee");
         ps.setString(2, "faculty@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "FACULTY");
         ps.setNull(5, Types.VARCHAR);
         ps.setNull(6, Types.INTEGER);
@@ -208,7 +218,7 @@ public class DatabaseManager {
 
         ps.setString(1, "Prof. Emma Davis");
         ps.setString(2, "emma@uni.edu");
-        ps.setString(3, "password123");
+        ps.setString(3, demoPassword);
         ps.setString(4, "FACULTY");
         ps.setNull(5, Types.VARCHAR);
         ps.setNull(6, Types.INTEGER);

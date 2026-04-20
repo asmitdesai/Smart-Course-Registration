@@ -16,13 +16,29 @@ public class SceneManager {
 
     public static void switchScene(String fxmlPath, String title) {
         try {
+            double currentWidth = primaryStage.getWidth();
+            double currentHeight = primaryStage.getHeight();
+            boolean isMaximized = primaryStage.isMaximized();
+
             FXMLLoader loader = new FXMLLoader(App.class.getResource(fxmlPath));
             Parent root = loader.load();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(App.class.getResource("/css/styles.css").toExternalForm());
-            primaryStage.setScene(scene);
+
             primaryStage.setTitle(title);
-            primaryStage.centerOnScreen();
+            primaryStage.setScene(scene);
+
+            if (!Double.isNaN(currentWidth) && currentWidth > 0 && !isMaximized) {
+                primaryStage.setWidth(currentWidth);
+                primaryStage.setHeight(currentHeight);
+            }
+            
+            primaryStage.setMaximized(isMaximized);
+
+            if (!primaryStage.isShowing()) {
+                primaryStage.centerOnScreen();
+                primaryStage.show();
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed to load scene: " + fxmlPath, e);
         }

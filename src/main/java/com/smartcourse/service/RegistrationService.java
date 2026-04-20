@@ -54,14 +54,21 @@ public class RegistrationService {
         paymentDAO.updateStatus(payment.getPaymentId(), payment.getStatus());
 
         if ("SUCCESS".equals(payment.getStatus())) {
-            registrationDAO.updateStatus(regId, "REGISTERED");
-            courseDAO.decrementSeats(courseId);
-            // Initialize grade and attendance records
-            Grade grade = new Grade(0, studentId, courseId, 0);
-            gradeDAO.upsert(grade);
-            Attendance att = new Attendance(0, studentId, courseId, 0, 0);
-            attendanceDAO.upsert(att);
-            return true;
+            // Attempt to secure the seat
+            if (courseDAO.decrementSeats(courseId)) {
+                registrationDAO.updateStatus(regId, "REGISTERED");
+                // Initialize grade and attendance records
+                Grade grade = new Grade(0, studentId, courseId, 0);
+                gradeDAO.upsert(grade);
+                Attendance att = new Attendance(0, studentId, courseId, 0, 0);
+                attendanceDAO.upsert(att);
+                return true;
+            } else {
+                // Payment was successful but seat is gone (race condition)
+                registrationDAO.updateStatus(regId, "SEAT_UNAVAILABLE");
+                // In a real system, you'd trigger a refund here
+                return false;
+            }
         } else {
             registrationDAO.updateStatus(regId, "PAYMENT_FAILED");
             return false;

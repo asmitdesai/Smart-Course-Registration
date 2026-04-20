@@ -16,8 +16,10 @@ import javafx.scene.layout.*;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.collections.transformation.FilteredList;
 
 public class AdminDashboardController implements Initializable {
     @FXML
@@ -515,9 +517,26 @@ public class AdminDashboardController implements Initializable {
 
     // ===== ALL REGISTRATIONS =====
     private Node buildRegistrationsView() {
-        VBox root = new VBox(20);
+        VBox root = new VBox(24);
         Label title = new Label("📋 All Registrations");
         title.getStyleClass().add("page-title");
+
+        // Action row: Search and Refresh
+        HBox actionRow = new HBox(12);
+        actionRow.setAlignment(Pos.CENTER_LEFT);
+
+        TextField searchField = new TextField();
+        searchField.setPromptText("Search students or courses...");
+        searchField.setPrefWidth(300);
+        searchField.getStyleClass().add("text-field");
+
+        Button refreshBtn = new Button("🔄 Refresh");
+        refreshBtn.getStyleClass().add("btn-secondary");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        actionRow.getChildren().addAll(searchField, spacer, refreshBtn);
 
         TableView<Registration> table = new TableView<>();
         table.getStyleClass().add("table-view");
@@ -556,10 +575,34 @@ public class AdminDashboardController implements Initializable {
         table.getColumns().addAll(studentCol, courseCol, dateCol, statusCol);
 
         try {
-            table.setItems(FXCollections.observableArrayList(registrationService.getAllRegistrations()));
+            List<Registration> allRegs = new ArrayList<>(registrationService.getAllRegistrations());
+            FilteredList<Registration> filteredData = new FilteredList<>(
+                    FXCollections.observableArrayList(allRegs), p -> true);
+
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                filteredData.setPredicate(reg -> {
+                    if (newValue == null || newValue.isEmpty())
+                        return true;
+                    String lower = newValue.toLowerCase();
+                    return reg.getStudentName().toLowerCase().contains(lower)
+                            || reg.getCourseName().toLowerCase().contains(lower);
+                });
+            });
+
+            table.setItems(filteredData);
+
+            refreshBtn.setOnAction(e -> {
+                try {
+                    allRegs.clear();
+                    allRegs.addAll(registrationService.getAllRegistrations());
+                    filteredData.setPredicate(p -> true);
+                } catch (SQLException ex) {
+                }
+            });
         } catch (SQLException e) {
         }
-        root.getChildren().addAll(title, table);
+
+        root.getChildren().addAll(title, actionRow, table);
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(true);
         sp.setFitToHeight(true);

@@ -6,7 +6,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.smartcourse.controller.FacultyDashboardController"
-            prefWidth="1100" prefHeight="700" styleClass="root">
+            minWidth="1100" minHeight="700" styleClass="root">
 
     <left>
         <VBox styleClass="sidebar" spacing="0" prefWidth="210" alignment="TOP_CENTER">
