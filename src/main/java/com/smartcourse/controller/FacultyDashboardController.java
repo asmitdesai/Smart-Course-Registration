@@ -15,6 +15,7 @@ import javafx.scene.layout.*;
 
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -30,6 +31,7 @@ public class FacultyDashboardController implements Initializable {
     private final ScheduleService scheduleService = ScheduleService.getInstance();
     private final AcademicService academicService = AcademicService.getInstance();
     private final CourseService courseService = CourseService.getInstance();
+    private final CourseMaterialService materialService = CourseMaterialService.getInstance();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -66,6 +68,11 @@ public class FacultyDashboardController implements Initializable {
     }
 
     @FXML
+    void showCourseMaterials() {
+        setContent(buildCourseMaterialsView());
+    }
+
+    @FXML
     void handleLogout() {
         AuthService.getInstance().logout();
         SceneManager.switchScene("/fxml/login.fxml", "Smart Course Registration");
@@ -86,15 +93,17 @@ public class FacultyDashboardController implements Initializable {
         HBox stats = new HBox(16);
         try {
             long courseCount = scheduleService.getSchedulesByFaculty(currentFaculty.getUserId()).size();
+            long materialCount = materialService.getMaterialsByFaculty(currentFaculty.getUserId()).size();
             stats.getChildren().addAll(
                     buildStatCard("📚 Assigned Courses", String.valueOf(courseCount), "#6366f1"),
                     buildStatCard("🏫 Department", currentFaculty.getDepartment(), "#8b5cf6"),
+                    buildStatCard("📎 Materials", String.valueOf(materialCount), "#10b981"),
                     buildStatCard("👤 Faculty ID", String.valueOf(currentFaculty.getFacultyId()), "#06b6d4"));
         } catch (SQLException e) {
             stats.getChildren().add(new Label("Error"));
         }
 
-        Label infoCard = new Label("Use the sidebar to manage attendance, grades, and view your course schedule.");
+        Label infoCard = new Label("Use the sidebar to manage attendance, grades, course materials, and view your schedule.");
         infoCard.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 14px;");
         infoCard.setWrapText(true);
 
@@ -404,6 +413,201 @@ public class FacultyDashboardController implements Initializable {
         }
 
         root.getChildren().addAll(title, table);
+        ScrollPane sp = new ScrollPane(root);
+        sp.setFitToWidth(true);
+        sp.setFitToHeight(true);
+        sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        return sp;
+    }
+
+    // ===== COURSE MATERIALS =====
+    private Node buildCourseMaterialsView() {
+        VBox root = new VBox(24);
+        Label title = new Label("📎 Course Materials");
+        title.getStyleClass().add("page-title");
+        Label subtitle = new Label("Upload notes, slides, assignments, and references for your students");
+        subtitle.getStyleClass().add("page-subtitle");
+
+        // ── Course selector ──
+        VBox selectorCard = new VBox(12);
+        selectorCard.getStyleClass().add("card");
+        Label selectTitle = new Label("Select Course");
+        selectTitle.getStyleClass().add("card-title");
+
+        ComboBox<Schedule> courseCombo = new ComboBox<>();
+        courseCombo.setPromptText("Select a course...");
+        courseCombo.setMaxWidth(Double.MAX_VALUE);
+        try {
+            courseCombo.setItems(FXCollections
+                    .observableArrayList(scheduleService.getSchedulesByFaculty(currentFaculty.getUserId())));
+            courseCombo.setConverter(new javafx.util.StringConverter<>() {
+                public String toString(Schedule s) {
+                    return s == null ? "" : s.getCourseName();
+                }
+                public Schedule fromString(String str) {
+                    return null;
+                }
+            });
+        } catch (SQLException e) {
+        }
+        selectorCard.getChildren().addAll(selectTitle, courseCombo);
+
+        // ── Existing materials table ──
+        TableView<CourseMaterial> materialsTable = new TableView<>();
+        materialsTable.getStyleClass().add("table-view");
+        materialsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        materialsTable.setPrefHeight(220);
+        materialsTable.setPlaceholder(new Label("Select a course to view materials") {{
+            setStyle("-fx-text-fill: #64748b;");
+        }});
+
+        TableColumn<CourseMaterial, String> typeCol = new TableColumn<>("Type");
+        typeCol.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getTypeEmoji() + " " + d.getValue().getMaterialType()));
+        typeCol.setMaxWidth(150);
+        TableColumn<CourseMaterial, String> titleCol = new TableColumn<>("Title");
+        titleCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTitle()));
+        TableColumn<CourseMaterial, String> descCol = new TableColumn<>("Description");
+        descCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDescription()));
+        TableColumn<CourseMaterial, String> dateCol = new TableColumn<>("Uploaded");
+        dateCol.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getUploadDate() != null ? d.getValue().getUploadDate().substring(0, 10) : ""));
+        dateCol.setMaxWidth(120);
+        materialsTable.getColumns().addAll(typeCol, titleCol, descCol, dateCol);
+
+        Label statusLabel = new Label("");
+
+        // Load materials when course selected
+        courseCombo.setOnAction(e -> {
+            Schedule selected = courseCombo.getValue();
+            if (selected == null) return;
+            try {
+                materialsTable.setItems(FXCollections
+                        .observableArrayList(materialService.getMaterialsByCourse(selected.getCourseId())));
+            } catch (SQLException ex) {
+                statusLabel.setText("Error loading materials: " + ex.getMessage());
+                statusLabel.getStyleClass().setAll("error-label");
+            }
+        });
+
+        // ── Upload form ──
+        VBox formCard = new VBox(16);
+        formCard.getStyleClass().add("card");
+        Label formTitle = new Label("Upload New Material");
+        formTitle.getStyleClass().add("card-title");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        grid.setVgap(12);
+
+        Label lTitle = new Label("TITLE");
+        lTitle.getStyleClass().add("label-form");
+        TextField titleField = new TextField();
+        titleField.setPromptText("e.g. Week 3 — Sorting Algorithms");
+        grid.add(lTitle, 0, 0);
+        grid.add(titleField, 0, 1);
+        GridPane.setHgrow(titleField, Priority.ALWAYS);
+
+        Label lType = new Label("TYPE");
+        lType.getStyleClass().add("label-form");
+        ComboBox<String> typeCombo = new ComboBox<>(FXCollections.observableArrayList(
+                "NOTES", "SLIDES", "ASSIGNMENT", "REFERENCE", "VIDEO_LINK", "OTHER"));
+        typeCombo.setPromptText("Select type");
+        typeCombo.setMaxWidth(Double.MAX_VALUE);
+        grid.add(lType, 1, 0);
+        grid.add(typeCombo, 1, 1);
+        GridPane.setHgrow(typeCombo, Priority.ALWAYS);
+
+        Label lDesc = new Label("DESCRIPTION");
+        lDesc.getStyleClass().add("label-form");
+        TextArea descArea = new TextArea();
+        descArea.setPromptText("Brief description of the material...");
+        descArea.setPrefRowCount(2);
+        descArea.setWrapText(true);
+
+        Label lContent = new Label("CONTENT / LINK");
+        lContent.getStyleClass().add("label-form");
+        TextArea contentArea = new TextArea();
+        contentArea.setPromptText("Paste text content, notes, or a URL link here...");
+        contentArea.setPrefRowCount(4);
+        contentArea.setWrapText(true);
+
+        Button uploadBtn = new Button("📤 Upload Material");
+        uploadBtn.getStyleClass().add("btn-primary");
+        uploadBtn.setMaxWidth(Double.MAX_VALUE);
+        uploadBtn.setOnAction(e -> {
+            Schedule selected = courseCombo.getValue();
+            if (selected == null) {
+                statusLabel.setText("⚠️ Please select a course first.");
+                statusLabel.getStyleClass().setAll("warning-label");
+                return;
+            }
+            if (titleField.getText().isEmpty() || typeCombo.getValue() == null) {
+                statusLabel.setText("⚠️ Title and type are required.");
+                statusLabel.getStyleClass().setAll("warning-label");
+                return;
+            }
+            try {
+                CourseMaterial material = new CourseMaterial();
+                material.setCourseId(selected.getCourseId());
+                material.setFacultyId(currentFaculty.getUserId());
+                material.setTitle(titleField.getText().trim());
+                material.setDescription(descArea.getText().trim());
+                material.setMaterialType(typeCombo.getValue());
+                material.setContent(contentArea.getText().trim());
+                material.setUploadDate(LocalDateTime.now().toString());
+
+                materialService.addMaterial(material);
+
+                statusLabel.setText("✅ Material uploaded successfully!");
+                statusLabel.getStyleClass().setAll("success-label");
+
+                // Clear form
+                titleField.clear();
+                descArea.clear();
+                contentArea.clear();
+                typeCombo.setValue(null);
+
+                // Refresh table
+                materialsTable.setItems(FXCollections
+                        .observableArrayList(materialService.getMaterialsByCourse(selected.getCourseId())));
+            } catch (Exception ex) {
+                statusLabel.setText("❌ Error: " + ex.getMessage());
+                statusLabel.getStyleClass().setAll("error-label");
+            }
+        });
+
+        // Delete button
+        Button deleteBtn = new Button("🗑 Delete Selected");
+        deleteBtn.getStyleClass().add("btn-danger");
+        deleteBtn.setOnAction(e -> {
+            CourseMaterial sel = materialsTable.getSelectionModel().getSelectedItem();
+            if (sel == null) {
+                statusLabel.setText("⚠️ Select a material to delete.");
+                statusLabel.getStyleClass().setAll("warning-label");
+                return;
+            }
+            try {
+                materialService.deleteMaterial(sel.getMaterialId());
+                statusLabel.setText("✅ Material deleted.");
+                statusLabel.getStyleClass().setAll("success-label");
+                Schedule cs = courseCombo.getValue();
+                if (cs != null)
+                    materialsTable.setItems(FXCollections
+                            .observableArrayList(materialService.getMaterialsByCourse(cs.getCourseId())));
+            } catch (SQLException ex) {
+                statusLabel.setText("❌ Error: " + ex.getMessage());
+                statusLabel.getStyleClass().setAll("error-label");
+            }
+        });
+
+        HBox btnRow = new HBox(12, uploadBtn, deleteBtn);
+        btnRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(uploadBtn, Priority.ALWAYS);
+
+        formCard.getChildren().addAll(formTitle, grid, lDesc, descArea, lContent, contentArea, btnRow, statusLabel);
+
+        root.getChildren().addAll(title, subtitle, selectorCard, materialsTable, formCard);
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(true);
         sp.setFitToHeight(true);

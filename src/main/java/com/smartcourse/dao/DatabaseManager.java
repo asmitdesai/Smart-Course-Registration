@@ -139,6 +139,21 @@ public class DatabaseManager {
                         FOREIGN KEY (course_id) REFERENCES courses(course_id)
                     )
                 """);
+
+        stmt.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS course_materials (
+                        material_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        course_id INTEGER NOT NULL,
+                        faculty_id INTEGER NOT NULL,
+                        title TEXT NOT NULL,
+                        description TEXT,
+                        material_type TEXT NOT NULL DEFAULT 'NOTES',
+                        content TEXT,
+                        upload_date TEXT NOT NULL,
+                        FOREIGN KEY (course_id) REFERENCES courses(course_id),
+                        FOREIGN KEY (faculty_id) REFERENCES users(user_id)
+                    )
+                """);
     }
 
     private void seedData() throws SQLException {

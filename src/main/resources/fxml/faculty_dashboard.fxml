@@ -23,6 +23,7 @@
                 <Button text="📋  Attendance" styleClass="nav-btn" onAction="#showAttendance" maxWidth="Infinity"/>
                 <Button text="🏆  Evaluate Students" styleClass="nav-btn" onAction="#showEvaluate" maxWidth="Infinity"/>
                 <Button text="📅  Schedule" styleClass="nav-btn" onAction="#showSchedule" maxWidth="Infinity"/>
+                <Button text="📎  Course Materials" styleClass="nav-btn" onAction="#showCourseMaterials" maxWidth="Infinity"/>
             </VBox>
             <VBox spacing="8" alignment="BOTTOM_CENTER">
                 <VBox styleClass="user-badge" spacing="2" alignment="CENTER">

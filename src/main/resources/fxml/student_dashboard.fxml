@@ -28,6 +28,7 @@
                 <Button id="navSchedule" text="📅  My Schedule" styleClass="nav-btn" onAction="#showSchedule" maxWidth="Infinity"/>
                 <Button id="navGrades" text="🏆  Grades" styleClass="nav-btn" onAction="#showGrades" maxWidth="Infinity"/>
                 <Button id="navAttendance" text="📋  Attendance" styleClass="nav-btn" onAction="#showAttendance" maxWidth="Infinity"/>
+                <Button id="navMaterials" text="📎  Course Materials" styleClass="nav-btn" onAction="#showMaterials" maxWidth="Infinity"/>
             </VBox>
 
             <!-- User Badge + Logout -->

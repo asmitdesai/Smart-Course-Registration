@@ -35,6 +35,7 @@ public class StudentDashboardController implements Initializable {
     private final RegistrationService registrationService = RegistrationService.getInstance();
     private final ScheduleService scheduleService = ScheduleService.getInstance();
     private final AcademicService academicService = AcademicService.getInstance();
+    private final CourseMaterialService materialService = CourseMaterialService.getInstance();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -73,6 +74,11 @@ public class StudentDashboardController implements Initializable {
     @FXML
     void showAttendance() {
         setContent(buildAttendanceView());
+    }
+
+    @FXML
+    void showMaterials() {
+        setContent(buildMaterialsView());
     }
 
     @FXML
@@ -557,6 +563,111 @@ public class StudentDashboardController implements Initializable {
         }
 
         root.getChildren().addAll(title, cards);
+        ScrollPane sp = new ScrollPane(root);
+        sp.setFitToWidth(true);
+        sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        return sp;
+    }
+
+    // ===== COURSE MATERIALS =====
+    private Node buildMaterialsView() {
+        VBox root = new VBox(20);
+        Label title = new Label("📎 Course Materials");
+        title.getStyleClass().add("page-title");
+        Label subtitle = new Label("Materials shared by your professors for registered courses");
+        subtitle.getStyleClass().add("page-subtitle");
+
+        VBox materialsContainer = new VBox(16);
+
+        try {
+            List<CourseMaterial> materials = materialService.getMaterialsForStudent(currentStudent.getUserId());
+            if (materials.isEmpty()) {
+                VBox emptyCard = new VBox(12);
+                emptyCard.getStyleClass().add("card");
+                emptyCard.setAlignment(Pos.CENTER);
+                Label emptyIcon = new Label("📭");
+                emptyIcon.setStyle("-fx-font-size: 48px;");
+                Label emptyLabel = new Label("No course materials available yet");
+                emptyLabel.setStyle("-fx-text-fill: #64748b; -fx-font-size: 16px; -fx-font-weight: 600;");
+                Label emptyHint = new Label("Materials will appear here when your professors upload them for your registered courses.");
+                emptyHint.setStyle("-fx-text-fill: #475569; -fx-font-size: 13px;");
+                emptyHint.setWrapText(true);
+                emptyCard.getChildren().addAll(emptyIcon, emptyLabel, emptyHint);
+                materialsContainer.getChildren().add(emptyCard);
+            } else {
+                // Group by course
+                java.util.LinkedHashMap<String, java.util.List<CourseMaterial>> grouped = new java.util.LinkedHashMap<>();
+                for (CourseMaterial m : materials) {
+                    grouped.computeIfAbsent(m.getCourseName(), k -> new java.util.ArrayList<>()).add(m);
+                }
+
+                for (var entry : grouped.entrySet()) {
+                    // Course header
+                    Label courseHeader = new Label("📘 " + entry.getKey());
+                    courseHeader.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #e2e8f0;");
+                    materialsContainer.getChildren().add(courseHeader);
+
+                    for (CourseMaterial mat : entry.getValue()) {
+                        VBox card = new VBox(10);
+                        card.getStyleClass().add("card");
+
+                        // Header row with type badge, title and date
+                        HBox header = new HBox(12);
+                        header.setAlignment(Pos.CENTER_LEFT);
+
+                        Label typeBadge = new Label(mat.getTypeEmoji() + " " + mat.getMaterialType());
+                        typeBadge.setStyle(
+                                "-fx-background-color: rgba(99,102,241,0.15); -fx-text-fill: #818cf8; " +
+                                "-fx-padding: 4 10; -fx-background-radius: 6; -fx-font-size: 11px; -fx-font-weight: 700;");
+
+                        Label matTitle = new Label(mat.getTitle());
+                        matTitle.setStyle("-fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: white;");
+                        HBox.setHgrow(matTitle, Priority.ALWAYS);
+
+                        Label dateLbl = new Label(mat.getUploadDate() != null ? mat.getUploadDate().substring(0, 10) : "");
+                        dateLbl.setStyle("-fx-text-fill: #64748b; -fx-font-size: 11px;");
+
+                        header.getChildren().addAll(typeBadge, matTitle, dateLbl);
+
+                        card.getChildren().add(header);
+
+                        // Description
+                        if (mat.getDescription() != null && !mat.getDescription().isEmpty()) {
+                            Label descLbl = new Label(mat.getDescription());
+                            descLbl.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 13px;");
+                            descLbl.setWrapText(true);
+                            card.getChildren().add(descLbl);
+                        }
+
+                        // Content
+                        if (mat.getContent() != null && !mat.getContent().isEmpty()) {
+                            TextArea contentArea = new TextArea(mat.getContent());
+                            contentArea.setEditable(false);
+                            contentArea.setWrapText(true);
+                            contentArea.setPrefRowCount(3);
+                            contentArea.setStyle(
+                                    "-fx-control-inner-background: #1e293b; -fx-text-fill: #cbd5e1; " +
+                                    "-fx-font-size: 13px; -fx-border-color: #334155; -fx-border-radius: 8; " +
+                                    "-fx-background-radius: 8;");
+                            card.getChildren().add(contentArea);
+                        }
+
+                        // Faculty name
+                        Label facultyLbl = new Label("Uploaded by: " + mat.getFacultyName());
+                        facultyLbl.setStyle("-fx-text-fill: #475569; -fx-font-size: 11px;");
+                        card.getChildren().add(facultyLbl);
+
+                        materialsContainer.getChildren().add(card);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            materialsContainer.getChildren().add(new Label("Error loading materials: " + e.getMessage()) {{
+                setStyle("-fx-text-fill: #f87171;");
+            }});
+        }
+
+        root.getChildren().addAll(title, subtitle, materialsContainer);
         ScrollPane sp = new ScrollPane(root);
         sp.setFitToWidth(true);
         sp.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
